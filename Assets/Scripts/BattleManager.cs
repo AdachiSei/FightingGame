@@ -37,7 +37,7 @@ public class BattleManager : MonoBehaviour
             return;
         _isEnd = true;
 
-        PlayerResult();
+        EnemyResult();
     }
 
     private async void Enemy()
@@ -48,7 +48,7 @@ public class BattleManager : MonoBehaviour
             return;
         _isEnd = true;
 
-        EnemyResult();
+        PlayerResult();
     }
 
     private void PlayerResult()
