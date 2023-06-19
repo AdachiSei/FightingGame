@@ -54,7 +54,9 @@ public class PlayerBase : MonoBehaviour, IActionable
     protected Collider _collider = null;
     protected PlayerActionsHash _playerActionHash = new ();
     private bool IsGod = false;
-
+    private Vector3 _defaultPos;
+    private int _defaultHP;
+    
     public Action<int> hpBar;
 
     private void Awake()
@@ -89,6 +91,12 @@ public class PlayerBase : MonoBehaviour, IActionable
         }
     }
 
+　　　public void Init()
+    {
+       transform.position = _defaultPos;
+       _playerData.HP = _defaultHP;
+    }
+    
     public void Idol()
     {
         _animator.Play(_playerActionHash.IdolHash);
@@ -137,9 +145,9 @@ public class PlayerBase : MonoBehaviour, IActionable
     }
 
     protected void PlayerAction(IPlayerCommand playerCommand)
-    {
+    { 
         IPlayerCommand command = playerCommand;
-        command?.Execute();
+        command?.Execute(); 
         CommandManager.I.AddPlayerCommand(command);
     }
 }
