@@ -3,11 +3,12 @@
 /// </summary>
 public interface IActionable
 {
-    public bool IsPunching { get; }
+    bool IsPunching { get; }
 
-    public void Idol();
-    public void LeftPunch();
-    public void RightPunch();
-    public void Guard();
-    public void Damage();
+    void Init();
+    void Idol();
+    void LeftPunch();
+    void RightPunch();
+    void Guard();
+    void Damage();
 }
