@@ -66,6 +66,7 @@ public class PlayerBase : MonoBehaviour, IActionable
         _collider ??= GetComponent<BoxCollider>();
         _playerActionHash.Init();
         _collider.enabled = false;
+        PlayerAction(new Init(this));
     }
 
     protected virtual void Update()
