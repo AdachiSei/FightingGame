@@ -7,7 +7,6 @@
 	{
 		#region Constants
 	
-		  public const string BGM = "BGM";
 	
 		#endregion
 	}
