@@ -28,5 +28,10 @@ namespace Template.Manager
         }
 
         #endregion
+
+        public void LoadScene(string name)
+        {
+            SceneLoader.LoadScene(name);
+        }
     }
 }

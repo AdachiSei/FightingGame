@@ -1,13 +1,17 @@
+using Cysharp.Threading.Tasks;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using Template.Constant;
 using UnityEngine;
 
 /// <summary>
 /// スクリプト
 /// </summary>
-public class PlayerController : PlayerBase
+public class Enemy : PlayerBase
 {
+    int _random = 0;
+    bool _isGuard = false;
+
     protected override void Update()
     {
         base.Update();
@@ -15,21 +19,24 @@ public class PlayerController : PlayerBase
         if (CommandManager.I.Locked)
             return;
 
-        var leftButton = Input.GetButtonDown(InputName.FIRE1);
-        var rightButton = Input.GetButtonDown(InputName.FIRE2);
-        var spaceButton = Input.GetButton(InputName.JUMP);
+        _random = UnityEngine.Random.Range(0, 10);
 
-        if (spaceButton && !IsPunching)
+        if (_isGuard || (_random == 0 && !IsPunching))
         {
             PlayerAction(new Guard(this));
+
+            if(_isGuard == false)
+                GuardCancel();
+
+            _isGuard = true;
             return;
         }
-        if (leftButton && !IsPunching)
+        if (_random == 1 && !IsPunching)
         {
             PlayerAction(new LeftPunch(this));
             return;
         }
-        if (rightButton && !IsPunching)
+        if (_random == 2 && !IsPunching)
         {
             PlayerAction(new RightPunch(this));
             return;
@@ -41,5 +48,12 @@ public class PlayerController : PlayerBase
         }
 
         PlayerAction(null);
+    }
+
+    private async void GuardCancel()
+    {
+        var random = UnityEngine.Random.Range(1, 3);
+        await UniTask.Delay(TimeSpan.FromSeconds(random));
+        _isGuard = false;
     }
 }
