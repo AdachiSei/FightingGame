@@ -16,10 +16,10 @@ public class PlayerController : MonoBehaviour, IActionable
         public float Speed = 2;
 
         [Header("体力")]
-        public int HP = 10;
+        public int HP = 20;
 
         [Header("ダメージ")]
-        public int Damage = 1;
+        public int Damage = 2;
     }
 
     private class PlayerActionsHash
@@ -90,6 +90,11 @@ public class PlayerController : MonoBehaviour, IActionable
     public void Guard()
     {
         _animator.Play(_playerActionHash.GuardHash);
+    }
+
+    public void Damage()
+    {
+
     }
 
     private void PlayerAction(IPlayerCommand playerCommand)
