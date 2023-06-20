@@ -4,11 +4,14 @@
 public interface IActionable
 {
     bool IsPunching { get; }
+    int HP { get; }
 
     void Init();
     void Idol();
     void LeftPunch();
     void RightPunch();
     void Guard();
-    void Damage();
+    void AddForce(bool _isDamege = true);
+    void SetHP(int hp);
+    void Dead();
 }

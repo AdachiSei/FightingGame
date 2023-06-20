@@ -8,9 +8,9 @@ using UnityEngine;
 /// </summary>
 public class PlayerController : PlayerBase
 {
-    protected override void Update()
+    protected override void OnUpdate()
     {
-        base.Update();
+        base.OnUpdate();
 
         if (CommandManager.I.Locked)
             return;

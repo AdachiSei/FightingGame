@@ -22,6 +22,11 @@ public class HPView : MonoBehaviour
         _player.hpBar += ChangeHP;
     }
 
+    public void Init()
+    {
+        _slider.value = _slider.maxValue;
+    }
+
     private void ChangeHP(int hp)
     {
         _slider.value = hp;

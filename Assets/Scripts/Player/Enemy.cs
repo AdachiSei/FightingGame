@@ -12,9 +12,9 @@ public class Enemy : PlayerBase
     int _random = 0;
     bool _isGuard = false;
 
-    protected override void Update()
+    protected override void OnUpdate()
     {
-        base.Update();
+        base.OnUpdate();
 
         if (CommandManager.I.Locked)
             return;

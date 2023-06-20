@@ -1,8 +1,7 @@
 using Cysharp.Threading.Tasks;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using Template.Constant;
+using UniRx;
+using UniRx.Triggers;
 using UnityEngine;
 
 /// <summary>
@@ -13,11 +12,8 @@ public class PlayerBase : MonoBehaviour, IActionable
     [Serializable]
     protected class PlayerData
     {
-        [Header("スピード")]
-        public float Speed = 2;
-
         [Header("体力")]
-        public int HP = 10;
+        public int HP = 20;
 
         [Header("ダメージ")]
         public int Damage = 1;
@@ -29,6 +25,7 @@ public class PlayerBase : MonoBehaviour, IActionable
         public int LeftPunchHash = 0;
         public int RightPunchHash = 0;
         public int GuardHash = 0;
+        public int DeadHash = 0;
 
         public void Init()
         {
@@ -36,6 +33,7 @@ public class PlayerBase : MonoBehaviour, IActionable
             LeftPunchHash = Animator.StringToHash("LeftPunch");
             RightPunchHash = Animator.StringToHash("RightPunch");
             GuardHash = Animator.StringToHash("Guard");
+            DeadHash = Animator.StringToHash("Dead");
         }
     }
 
@@ -43,7 +41,10 @@ public class PlayerBase : MonoBehaviour, IActionable
     public bool IsPunching { get; private set; } = false;
 
     [SerializeField]
-    protected PlayerData _playerData = new ();
+    protected PlayerData _playerData = new();
+
+    [SerializeField]
+    protected bool _isPlayer = false;
 
     [SerializeField]
     [Header("敵")]
@@ -52,14 +53,23 @@ public class PlayerBase : MonoBehaviour, IActionable
     protected Rigidbody _rb = null;
     protected Animator _animator = null;
     protected Collider _collider = null;
-    protected PlayerActionsHash _playerActionHash = new ();
+    protected PlayerActionsHash _playerActionHash = new();
     private bool IsGod = false;
     private Vector3 _defaultPos;
     private int _defaultHP;
-    
+    private CompositeDisposable _compositeDisposable = new CompositeDisposable();
+
     public Action<int> hpBar;
 
     private void Awake()
+    {
+        _defaultPos = transform.position;
+        _defaultHP = _playerData.HP;
+        var dir = _enemyPos.position - transform.position;
+        transform.rotation = Quaternion.LookRotation(dir);
+    }
+
+    private async void Start()
     {
         _rb ??= GetComponent<Rigidbody>();
         _animator ??= GetComponent<Animator>();
@@ -67,9 +77,16 @@ public class PlayerBase : MonoBehaviour, IActionable
         _playerActionHash.Init();
         _collider.enabled = false;
         PlayerAction(new Init(this));
+
+        await UniTask.Delay(TimeSpan.FromSeconds(3f));
+
+        this
+            .UpdateAsObservable()
+            .Subscribe(_ => OnUpdate())
+            .AddTo(_compositeDisposable);
     }
 
-    protected virtual void Update()
+    protected virtual void OnUpdate()
     {
         var dir = _enemyPos.position - transform.position;
         transform.rotation = Quaternion.LookRotation(dir);
@@ -78,26 +95,34 @@ public class PlayerBase : MonoBehaviour, IActionable
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.TryGetComponent(out IActionable actionable))
+        if (other.gameObject.TryGetComponent(out IActionable actionable))
         {
-            if(actionable.IsPunching && !IsGod)
+            if (actionable.IsPunching && IsGod)
             {
-                Damage();
+                AddForce();
+                actionable.AddForce(false);
             }
-            else if(actionable.IsPunching)
+            else if (actionable.IsPunching && !IsGod)
             {
-                _playerData.HP--;
+                if (!CommandManager.I.Locked)
+                    _playerData.HP--;
+
                 hpBar(_playerData.HP);
+                Dead();
+                Debug.Log(_playerData.HP);
             }
+            if (actionable.HP <= 0)
+                _compositeDisposable.Dispose();
         }
     }
 
-　　　public void Init()
+    public void Init()
     {
-       transform.position = _defaultPos;
-       _playerData.HP = _defaultHP;
+        transform.position = _defaultPos;
+        _playerData.HP = _defaultHP;
+        _animator.Play(_playerActionHash.IdolHash);
     }
-    
+
     public void Idol()
     {
         _animator.Play(_playerActionHash.IdolHash);
@@ -134,21 +159,40 @@ public class PlayerBase : MonoBehaviour, IActionable
         IsGod = true;
     }
 
-    public void Damage()
+    public async void AddForce(bool _isDamege = true)
     {
-        _playerData.HP = 0;
+        var force = _isPlayer ? new Vector3(0, 0, -20) : new Vector3(0, 0, 20);
+
+        if (!_isDamege)
+            force *= -1;
+
+        _rb.AddForce(force);
+
+        await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
+
+        _rb.velocity = Vector3.zero;
+        Dead();
+    }
+
+    public void SetHP(int hp)
+    {
+        _playerData.HP = hp;
         hpBar(_playerData.HP);
-        var enemy = _enemyPos.position;
-        var self = transform.position;
-        var dir = enemy - self;
-        _rb.AddForce(-dir.normalized * 100);
-        Debug.Log(gameObject.name);
+    }
+    public void Dead()
+    {
+        if (_playerData.HP > 0)
+            return;
+
+        _animator.Play(_playerActionHash.DeadHash);
+        _compositeDisposable.Dispose();
     }
 
     protected void PlayerAction(IPlayerCommand playerCommand)
-    { 
+    {
         IPlayerCommand command = playerCommand;
-        command?.Execute(); 
+        command?.Execute();
         CommandManager.I.AddPlayerCommand(command);
     }
+
 }
